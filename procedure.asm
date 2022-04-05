@@ -2,10 +2,9 @@
 	message: .asciiz "Hi everybody \nMy name is Sifiso. \n"
 
 .text
+	#caller
 	main:
-		jal displayMessage
-	
-	
+		jal displayMessage #function call
 	
 	# Tell the system that the program is done
 	li $v0, 10

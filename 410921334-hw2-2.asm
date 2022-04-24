@@ -35,7 +35,7 @@
 		la $a0, Space #load word to register $a0
 		syscall #do it
         	
-        	subi $a1, $a1, 4
+        	subi $a1, $a1, 3
         	
         	jal fib
         	

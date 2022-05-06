@@ -1,17 +1,12 @@
 	.data
-arrayNum: .space 400        	# "array" of 40 numbers
-division: .byte '/'
-multiplication: .byte '*'
-addition: .byte '+'
-subtraction: .byte '-'
-stop: .byte '='
 line  :  .asciiz "===================================================================================================\n"
 prompt: .asciiz "Enter your calculation and equal sign to indicate end. Each operand and number on newline e.g “14 / + / 6 / * / 3 / = /” (symbol “/” indicates next line not input): \n"
 instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n"
-promptNum: .asciiz "Enter integer (e.g 1 or 22 or 100): "
-promptOp: .asciiz "Enter operand (+, -, *, /(integer division drops remainder), sqrt, % (modulus), ^(power): "
-invalidOp :   .asciiz "\nError!!!Invalid operator entered'n"
-newline:	.asciiz	"\n"		# a newline string.
+invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
+promptNum: .asciiz "Enter integer: "
+promptOperand: .asciiz "Enter Operand: "
+	.align 4
+arrayNum: .space 400        	# "array" of 40 numbers
       	.text
 main:
 	# printing prompt line
@@ -41,37 +36,29 @@ main:
         #get first number from user
         li $v0, 5 #load immidiatel the user input (integer)
         syscall
+        move $t1, $v0
         
-        sll $t0, $a1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
-        sw $v0, 0($t0) #insert user input at arrayNum[current_i] 
-        
-               
-	j calculate
-
-calculate:
-	add $v1, $v1, $zero
-	jal check_operand
-	beq $v0, -1, end
-	beq $v0, -2, consolidate	 
-	
-	j calculate 
-
+        sll $t0, $a1, 2 
+        add $t0, $t0, $a0 
+        sw $t1, 0($t0) 
+        addi $a1, $a1, 1
+             
 # looping and taking input until 0 is entered
-check_operand:        
+check_operand:  
         #get operand from user
         li $v0, 12
  	syscall
+ 	move $s2, $v0
  	# save operator
-	move $s1,$v0
-	addi $v1, $v1, 0 
+	#move $s1,$v0
+	add $a1, $a1, 0
         
-        beq $s1, '=', end_loop_input #stop loopif input  is '='
-        beq $s1, '+', funcAdd
-        beq $s1, '-', funcSub
-        beq $s1, '/', funcDiv
-        beq $s1, '*', funcMult
-        beq $s1, '%', funcMod        
+        beq $s2, '=', consolidate_prep #stop loopif input  is '='
+        beq $s2, '+', funcAdd
+        beq $s2, '-', funcSub
+        beq $s2, '/', funcDiv
+        beq $s2, '*', funcMult
+        beq $s2, '%', funcMod        
         
         j invalid
         
@@ -80,123 +67,97 @@ invalid:
  	li $v0, 4
  	la $a0, invalidOp
  	syscall
- 	
- 	addi $v1, $zero, 0
- 	addi $v0, $zero, -1
- 	
- 	jr $ra  
-end:
-       		li $v0, 10
-        	syscall 
+ 	 	
+ 	j end 
         	
-end_loop_input:
-	addi $v1, $v1, 0
-	addi $v0, $zero, -2
-		
-	jr $ra
 funcAdd:
-	addi $v1, $v1, 0
+	add $a1, $a1, 0
 	# loading base address of array
 	la $a0, arrayNum
-	add $v1, $v1, $zero
-	
 	
 	#get next number from user
-        li $v0, 5 #load immidiatel the user input (integer)
+        li $v0, 5 
         syscall
+        move $t1, $v0
         	
-	
-	sll $t0, $v1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
-        sw $v0, 4($t0) #insert user input at arrayNum[current_i]
-        
-	addi $v1, $v1, 1
-	addi $v0, $zero, 1
-		
-	jr $ra
+	sll $t0, $a1, 2 
+        add $t0, $t0, $a0 
+        sw $t1, 0($t0)
+        add $a1, $a1, 1			
+	j check_operand
 funcSub:
+	add $a1, $a1, 0
 	# loading base address of array
 	la $a0, arrayNum
-	add $v1, $v1, $zero
 	
 	#get first number from user
-        li $v0, 5 #load immidiatel the user input (integer)
+        li $v0, 5 
         syscall	
+        move $t1, $v0
         
-	mul $t3, $v0, -1
-	sll $t0, $v1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
-        sw $t3, 4($t0) #insert user input at arrayNum[current_i]
-        
-	addi $v1, $v1, 1
-	addi $v0, $zero, 1
+	mul $t3, $t1, -1
+	sll $t0, $a1, 2
+        add $t0, $t0, $a0 
+        sw $t3, 0($t0) 
+        add $a1, $a1, 1
 		
-	jr $ra
+	j check_operand
 funcMult:
+	add $a1, $a1, 0
 	# loading base address of array
 	la $a0, arrayNum
-	add $v1, $v1, $zero
 	
 	#get first number from user
-        li $v0, 5 #load immidiatel the user input (integer)
-        syscall	
-        
+        li $v0, 5 
+        syscall        
        	move $t5, $v0
         
-	sll $t0, $v1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
+	sll $t0, $a1, 1 
+        add $t0, $t0, $a0 
         lw $t4, 0($t0)
         mul $t3, $t4, $t5
-        sw $t3, 0($t0) #insert user input at arrayNum[current_i]
-      
-	addi $v1, $v1, 0
-	addi $v0, $zero, 1
+        sw $t3, 0($t0) 
 		
-	jr $ra
+	j check_operand
 funcDiv:
+	add $a1, $a1, 0
 	# loading base address of array
 	la $a0, arrayNum
-	add $v1, $v1, $zero
 	
 	#get first number from user
-        li $v0, 5 #load immidiatel the user input (integer)
-        syscall	
+        li $v0, 5 
+        syscall
+        move $t1, $v0	
         
-	sll $t0, $v1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
-        lw $t5 , 4($t0)
+	sll $t0, $a1, 1 
+        add $t0, $t0, $a0 
         lw $t4, 0($t0)
-        div $t3, $t4, $t5
-        sw $t3, 0($t0) #insert user input at arrayNum[current_i]
-        
-	addi $v1, $v1, 0
-	addi $v0, $zero, 1
+        div $t3, $t4, $t1
+        sw $t3, 0($t0) 
 		
-	jr $ra
+	j check_operand
 funcMod:
+	add $a1, $a1, 0
 	# loading base address of array
 	la $a0, arrayNum
-	add $v1, $v1, $zero
 	
 	#get first number from user
         li $v0, 5 #load immidiatel the user input (integer)
         syscall	
+        move $t1, $v0
         
-	sll $t0, $v1, 2 # create temporal variable that will fit a number
-        add $t0, $t0, $a0 #point $t0 to the current psition in arrayNum
-        lw $t5 , 4($t0)
-        lw $t4, 0($t0)
-        div $t3, $t4, $t5
-        sw $t3, 0($t0) #insert user input at arrayNum[current_i]
-        
-	addi $v1, $v1, 0
-	addi $v0, $zero, 1
+	sll $t0, $a1, 1 
+        add $t0, $t0, $a0 
+        lw $s4, 0($t0)
+        div $s4, $t1
+        mfhi $t2
+        sw $t2, 0($t0) 
 		
-	jr $ra
-consolidate:
+	j check_operand
+
 consolidate_prep:
 	la $t0, arrayNum
-	move $t1, $v1
+	move $t1, $a1
 	li $t2, 0
 	li $a3, 0
 consolidate_addAll:
@@ -216,10 +177,7 @@ print_end:
 	syscall
 	
 	j end	
-
 	
-	
-		
-	
-	
-	
+end:
+       		li $v0, 10
+        	syscall 

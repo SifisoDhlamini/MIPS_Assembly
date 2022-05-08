@@ -1,7 +1,7 @@
-	.data
-	buffer: .space 12
+#410921334 - Sifiso Lucolo Dhlamini - Midterm Q1
+		.data
 line  :  .asciiz "===================================================================================================\n"
-prompt: .asciiz "Enter your calculation and equal sign to indicate end. \n Each operand and number on newline. \n New line will be automatically added for you after Operand. \n Press Enter after every number you input. \n No spaces\n e.g “14 / + / 6 / */ 3 / = /” (symbol “/” indicates next line not input): \n"
+prompt: .asciiz "Enter your calculation and use equal sign to indicate end. \n Each operand and number on newline  \n Press enter after every input (number or operand).\n No spaces are allowed or needed \n e.g “14 ENTER + ENTER 6 ENTER * ENTER 3 ENTER = ENTER”): \n"
 instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n"
 invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
 promptNum: .asciiz "Enter integer: "
@@ -9,6 +9,7 @@ newLine: .asciiz "\n"
 promptOperand: .asciiz "Enter Operand: "
 	.align 4
 arrayNum: .space 400        	# "array" of 40 numbers
+operand: .space 3 #3bytes to accomodate '\n' character, which I will negelect, but want to capture, to remove from buffer
       	.text
 main:
 	# printing prompt line
@@ -41,22 +42,22 @@ main:
         #move $t1, $v0
         
         sw $v0, arrayNum($a1) 
-        addi $a1, $a1, 4
+        addi $a2, $a1, 4
              
 # looping and taking input until 0 is entered
 check_operand:  
-        #get operand from user
-        li $v0, 12
- 	syscall
- 	move $t2, $v0 # save operator
  	
- 	#move to new line
- 	li $v0, 4
- 	la $a0, newLine
-	syscall	
+ 	#keep track of iterator to argument in a2
+ 	add $a2, $a2, 0
  	
-	add $a1, $a1, 0
+ 	#load a string with operand + '\n' captured on keyboard stroke (3bytes)
+ 	li $v0, 8
+	la $a0, operand
+	li $a1, 3
+	syscall
 	
+	li $t0, 0
+	lb $t2, operand($t0) #only get the operan and leave out the '\n' (index 0 = $t0)		
         
         beq $t2, '=', consolidate_prep #stop loopif input  is '='
         beq $t2, '+', funcAdd
@@ -76,7 +77,7 @@ invalid:
  	j end 
         	
 funcAdd:
-	addi $a1, $a1, 0
+	addi $a2, $a2, 0
 	# loading base address of array
 	
 	#get next number from user
@@ -84,11 +85,11 @@ funcAdd:
         syscall
         move $t1, $v0
         	 
-        sw $t1, arrayNum($a1)
-        addi $a1, $a1, 4			
+        sw $t1, arrayNum($a2)
+        addi $a2, $a2, 4			
 	j check_operand
 funcSub:
-	addi $a1, $a1, 0
+	addi $a2, $a2, 0
 	# loading base address of array
 	
 	#get first number from user
@@ -97,12 +98,12 @@ funcSub:
         move $t1, $v0
         
 	mul $t3, $t1, -1
-        sw $t3, arrayNum($a1) 
-        addi $a1, $a1, 4
+        sw $t3, arrayNum($a2) 
+        addi $a2, $a2, 4
 		
 	j check_operand
 funcMult:
-	subi $a1, $a1, 4
+	subi $a2, $a2, 4
 	# loading base address of array
 	
 	#get first number from user
@@ -110,14 +111,14 @@ funcMult:
         syscall        
        	move $t5, $v0
         
-        lw $t4, arrayNum($a1)
+        lw $t4, arrayNum($a2)
         mul $t3, $t4, $t5
-        sw $t3, arrayNum($a1)
-        addi $a1, $a1, 4 
+        sw $t3, arrayNum($a2)
+        addi $a2, $a2, 4 
 		
 	j check_operand
 funcDiv:
-	subi $a1, $a1, 4
+	subi $a2, $a2, 4
 	# loading base address of array
 	
 	#get first number from user
@@ -125,14 +126,14 @@ funcDiv:
         syscall
         move $t1, $v0	
         
-	lw $t4, arrayNum($a1)
+	lw $t4, arrayNum($a2)
         div $t3, $t4, $t1
         sw $t3, arrayNum($a1)
-        addi $a1, $a1, 4 
+        addi $a2, $a2, 4 
 		
 	j check_operand
 funcMod:
-	subi $a1, $a1, 4
+	subi $a2, $a2, 4
 	# loading base address of array
 	
 	#get first number from user
@@ -140,16 +141,16 @@ funcMod:
         syscall	
         move $t1, $v0
         
-	lw $t4, arrayNum($a1)
+	lw $t4, arrayNum($a2)
         div $s4, $t1
         mfhi $t2
-        sw $t2, arrayNum($a1)
-        addi $a1, $a1, 4  
+        sw $t2, arrayNum($a2)
+        addi $a2, $a2, 4  
 		
 	j check_operand
 
 consolidate_prep:
-	move $t1, $a1
+	move $t1, $a2
 	li $t2, 0
 	li $a3, 0
 consolidate_addAll:

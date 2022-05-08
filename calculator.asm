@@ -2,7 +2,7 @@
 		.data
 line  :  .asciiz "===================================================================================================\n"
 prompt: .asciiz "Enter your calculation and use equal sign to indicate end. \n Each operand and number on newline  \n Press enter after every input (number or operand).\n No spaces are allowed or needed \n e.g “14 ENTER + ENTER 6 ENTER * ENTER 3 ENTER = ENTER”): \n"
-instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n"
+instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n \n Power of (^)\n"
 invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
 promptNum: .asciiz "Enter integer: "
 newLine: .asciiz "\n"
@@ -64,7 +64,8 @@ check_operand:
         beq $t2, '-', funcSub
         beq $t2, '/', funcDiv
         beq $t2, '*', funcMult
-        beq $t2, '%', funcMod        
+        beq $t2, '%', funcMod 
+        beq $t2, '^', funcPow       
         
         j invalid
         
@@ -149,6 +150,40 @@ funcMod:
 		
 	j check_operand
 
+funcPow:
+	subi $a2, $a2, 4
+	# loading base address of array
+	
+	#get first number from user
+        li $v0, 5 #load immidiatel the user input (integer)
+        syscall	
+        move $t1, $v0
+        
+        lw $t4, arrayNum($a2) #get last value in array and store in $t4
+        beq $t1, 0, ifZero
+        addi $t2, $t1, 0
+        lw $t4, arrayNum($a2)
+        addi $t5, $t4, 0       
+        b greaterThanZero
+        
+        #if number after power sign is greater than zero
+        greaterThanZero:
+        	beq $t2, 1, endPow
+        	mul $t4, $t4, $t5
+        	subi $t2, $t2, 1
+        	sw $t4, arrayNum($a2)
+        	b greaterThanZero       
+        
+        #anything to the power zero is one, so change last value to 1 (one)
+        ifZero:	  
+		addi $t2, $zero, 1
+		sw $t2, arrayNum($a2)		
+		b endPow
+	
+	endPow:
+		addi $a2, $a2, 4	
+		j check_operand
+	
 consolidate_prep:
 	move $t1, $a2
 	li $t2, 0

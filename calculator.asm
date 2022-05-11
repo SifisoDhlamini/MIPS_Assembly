@@ -1,12 +1,9 @@
 #410921334 - Sifiso Lucolo Dhlamini - Midterm Q1
 		.data
 line  :  .asciiz "===================================================================================================\n"
-prompt: .asciiz "Enter your calculation and use equal sign to indicate end. \n Each operand and number on newline  \n Press enter after every input (number or operand).\n No spaces are allowed or needed \n e.g “14 ENTER + ENTER 6 ENTER * ENTER 3 ENTER = ENTER”): \n"
-instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n Power of (^)\n + sqrt of next number (#)\n  - sqrt of of ($)\n* sqrt of next number (&)\n/ sqrt of next number (@)\nFIRST ENTERED NUMBER CAN NOT BE SQUARED\n"
+prompt: .asciiz "Enter your calculation and use equal sign to indicate end. \n Each operand and number on newline  \n Press enter after every input (number or operand).\n No spaces are allowed or needed \n e.g (14 ENTER + ENTER 6 ENTER * ENTER 3 ENTER = ENTER): \n"
+instruction :  .asciiz " Addition Operator is (+)\n Minus Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n Power of (^)\n + sqrt of next number (#)\n - sqrt of of ($)\n * sqrt of next number (&)\n / sqrt of next number (@)\n FIRST ENTERED NUMBER CAN NOT BE SQUARED\n"
 invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
-promptNum: .asciiz "Enter integer: "
-newLine: .asciiz "\n"
-promptOperand: .asciiz "Enter Operand: "
 	.align 4
 arrayNum: .space 400        	# "array" of 40 numbers
 operand: .space 3 #3bytes to accomodate '\n' character, which I will negelect, but want to capture, to remove from buffer

@@ -1,7 +1,7 @@
 	.data
 	buffer: .space 12
 line  :  .asciiz "===================================================================================================\n"
-prompt: .asciiz "Enter your calculation and equal sign to indicate end. \n Each operand and number on newline. \n New line will be automatically added for you after Operand. \n Press Enter after every number you input. \n No spaces\n e.g “14 / + / 6 / */ 3 / = /” (symbol “/” indicates next line not input): \n"
+prompt: .asciiz "Enter your calculation and equal sign to indicate end. \n Each operand and number on newline. \n New line will be automatically added for you after Operand. \n Press Enter after every number you input. \n No spaces\n e.g ï¿½14 / + / 6 / */ 3 / = /ï¿½ (symbol ï¿½/ï¿½ indicates next line not input): \n"
 instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n"
 invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
 promptNum: .asciiz "Enter integer: "
@@ -39,7 +39,6 @@ main:
         #get first number from user
         li $v0, 5 #load immidiatel the user input (integer)
         syscall
-        #move $t1, $v0
         
         sw $v0, arrayNum($a1) 
         addi $a2, $a1, 4
@@ -59,7 +58,6 @@ check_operand:
 	li $t0, 0
 	lb $t2, operand($t0)		
         
-        beq $t2, '=', consolidate_prep #stop loopif input  is '='
         beq $t2, '+', funcAdd
         beq $t2, '-', funcSub
         beq $t2, '/', funcDiv

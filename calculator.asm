@@ -4,6 +4,7 @@ line  :  .asciiz "==============================================================
 prompt: .asciiz "Enter your calculation and use equal sign to indicate end. \n Each operand and number on newline  \n Press enter after every input (number or operand).\n No spaces are allowed or needed \n e.g (14 ENTER + ENTER 6 ENTER * ENTER 3 ENTER = ENTER): \n"
 instruction :  .asciiz " Addition Operator is (+)\n Minus Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n Power of (^)\n + sqrt of next number (#)\n - sqrt of of ($)\n * sqrt of next number (&)\n / sqrt of next number (@)\n FIRST ENTERED NUMBER CAN NOT BE SQUARED\n"
 invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
+invalidDiv: .asciiz "\nError!!!Can not divide by zero'\n"
 	.align 4
 arrayNum: .space 400        	# "array" of 40 numbers
 operand: .space 3 #3bytes to accomodate '\n' character, which I will negelect, but want to capture, to remove from buffer
@@ -123,12 +124,22 @@ funcDiv:
         syscall
         move $t1, $v0	
         
+        beq $t1, $t9, zerodivide
 	lw $t4, arrayNum($a2)
         div $t3, $t4, $t1
         sw $t3, arrayNum($a2)
         addi $a2, $a2, 4 
 		
 	j check_operand
+	
+zerodivide:
+	# Prompt for invalid input
+ 	li $v0, 4
+ 	la $a0, invalidDiv
+ 	syscall
+ 	 	
+ 	j end
+
 funcMod:
 	# keeping track of iterator
 	subi $a2, $a2, 4

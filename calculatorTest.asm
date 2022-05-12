@@ -1,173 +1,232 @@
-	.data
-	buffer: .space 12
-line  :  .asciiz "===================================================================================================\n"
-prompt: .asciiz "Enter your calculation and equal sign to indicate end. \n Each operand and number on newline. \n New line will be automatically added for you after Operand. \n Press Enter after every number you input. \n No spaces\n e.g �14 / + / 6 / */ 3 / = /� (symbol �/� indicates next line not input): \n"
-instruction :  .asciiz " Addition Operator is (+)\n Negative Operator is (-)\n Multiplication is (*)\n Division is (/)\n Modulus or remainder (%)\n"
-invalidOp :   .asciiz "\nError!!!Invalid operator entered'\n"
-promptNum: .asciiz "Enter integer: "
-newLine: .asciiz "\n"
-promptOperand: .asciiz "Enter Operand: "
-	.align 4
-arrayNum: .space 400        	# "array" of 40 numbers
-operand: .space 3
-      	.text
-main:
-	# printing prompt line
-	li $v0, 4
-	la $a0, line
-	syscall
-	
-	#printing prompt
-        la $a0, prompt
-        li $v0, 4
-        syscall
-        
-        # printing instruction
-        la $a0, instruction
-        li $v0, 4
-        syscall
-        
-        # printing prompt line
-        li $v0, 4
-	la $a0, line
-	syscall
-        
-        # loading base address of array and initializing iterator
-        #la $a0, arrayNum
-        li $a1, 0 
-        
-        #get first number from user
-        li $v0, 5 #load immidiatel the user input (integer)
-        syscall
-        
-        sw $v0, arrayNum($a1) 
-        addi $a2, $a1, 4
-             
-# looping and taking input until 0 is entered
-check_operand:  
- 	
- 	#keep track of iterator to argument in a2
- 	add $a2, $a2, 0
- 	
- 	#load a string
- 	li $v0, 8
-	la $a0, operand
-	li $a1, 3
-	syscall
-	
-	li $t0, 0
-	lb $t2, operand($t0)		
-        
-        beq $t2, '+', funcAdd
-        beq $t2, '-', funcSub
-        beq $t2, '/', funcDiv
-        beq $t2, '*', funcMult
-        beq $t2, '%', funcMod        
-        
-        j invalid
-        
-invalid:
- 	# Prompt for invalid input
- 	li $v0, 4
- 	la $a0, invalidOp
- 	syscall
- 	 	
- 	j end 
-        	
-funcAdd:
-	addi $a2, $a2, 0
-	# loading base address of array
-	
-	#get next number from user
-        li $v0, 5 
-        syscall
-        move $t1, $v0
-        	 
-        sw $t1, arrayNum($a2)
-        addi $a2, $a2, 4			
-	j check_operand
-funcSub:
-	addi $a2, $a2, 0
-	# loading base address of array
-	
-	#get first number from user
-        li $v0, 5 
-        syscall	
-        move $t1, $v0
-        
-	mul $t3, $t1, -1
-        sw $t3, arrayNum($a2) 
-        addi $a2, $a2, 4
-		
-	j check_operand
-funcMult:
-	subi $a2, $a2, 4
-	# loading base address of array
-	
-	#get first number from user
-        li $v0, 5 
-        syscall        
-       	move $t5, $v0
-        
-        lw $t4, arrayNum($a2)
-        mul $t3, $t4, $t5
-        sw $t3, arrayNum($a2)
-        addi $a2, $a2, 4 
-		
-	j check_operand
-funcDiv:
-	subi $a2, $a2, 4
-	# loading base address of array
-	
-	#get first number from user
-        li $v0, 5 
-        syscall
-        move $t1, $v0	
-        
-	lw $t4, arrayNum($a2)
-        div $t3, $t4, $t1
-        sw $t3, arrayNum($a1)
-        addi $a2, $a2, 4 
-		
-	j check_operand
-funcMod:
-	subi $a2, $a2, 4
-	# loading base address of array
-	
-	#get first number from user
-        li $v0, 5 #load immidiatel the user input (integer)
-        syscall	
-        move $t1, $v0
-        
-	lw $t4, arrayNum($a2)
-        div $s4, $t1
-        mfhi $t2
-        sw $t2, arrayNum($a2)
-        addi $a2, $a2, 4  
-		
-	j check_operand
+.data
+str1:	.asciiz	"\n\n------- Illegal input -------\n"
+str2:	.asciiz	"value: "
+str3:	.asciiz	"\toper: "
+str5:	.asciiz	"enter: "
+strnewl:.asciiz	"\n"
 
-consolidate_prep:
-	move $t1, $a2
-	li $t2, 0
-	li $a3, 0
-consolidate_addAll:
-	bge $t2, $t1, print_end
-	lw $t4, arrayNum($t2)
-	add $a3, $a3, $t4
-	addi	$t2, $t2, 4
-	j consolidate_addAll
-print_end:
-	li	$v0, 4
-	la	$a0, line
+	.text
+	.globl main
+main:
+	li $s5, 0					# global var. new value.	
+	li $s6, 0					# global var. current value.	
+	li $s7, ' '					# global var. current oper.
+loop:
+	jal prtstat
+	li $v0, 5					# read an integer
+	syscall
+	beq $v0, -1000, Thousand	# if typed -1000
+	bne $s7, 20, NotEmpty
+	move $s6, $v0
+	j loop
+NotEmpty:	
+	move $s5, $v0
+	move $a0, $s6				# moves $s registers into $a registers
+	move $a1, $s7				# for calculation
+	move $a2, $s5
+	jal cal_fun
+	move $s6, $v0				# moves result into current value
+	j loop
+Thousand:
+	li $v0, 12
+	syscall
+	add $s7, $v0, $0
+	j loop
+
+done:
+	li $v0, 10					# exit
 	syscall
 	
+#-----------------------------------
+# just prints whatever in $s5, $s6, $s7
+#-----------------------------------
+prtstat:
+	li $v0,4
+	la $a0, strnewl
+	syscall
+
+	li $v0,4
+	la $a0, str2
+	syscall
+	ori	$a0,$s6, 0
 	li $v0, 1
-	move $a0, $a3
 	syscall
+
+	li $v0, 4
+	la $a0, str3
+	syscall
+	ori	$a0,$s7, 0
+	li $v0, 11
+	syscall
+
+	li $v0,4
+	la $a0, strnewl
+	syscall
+
+	li $v0,4
+	la $a0, str5
+	syscall
+
+	jr	$ra
 	
-	j end	
+#-----------------------------------
+# Called when a calculation is needed and returns in $v0 the result.
+# Error checking done by the caller and the values are valid.
+# The first value, the operator, and the second value in $a0, $a1, and $a2.
+# Handles simple things like +,-*,/ inside this function.
+# Calls gcf and calnchoosek for @ and &. 
+#-----------------------------------
+cal_fun:
+	addi $sp, $sp, -4			# store in stack
+	sw $ra, 0($sp)
+	addi $sp, $sp, -4
+	sw $a0, 0($sp)
+	addi $sp, $sp, -4
+	sw $a1, 0($sp)
+	addi $sp, $sp, -4
+	sw $a2, 0($sp)
 	
-end:
-       		li $v0, 10
-        	syscall 
+	beq $a1, 43, addcal			#If inputted char matches
+	beq $a1, 45, subcal			# valid function, jumps to it
+	beq $a1, 42, mulcal
+	beq $a1, 47, divcal
+	beq $a1, 64, gcfcal
+	beq $a1, 38, chocal			# n choose k
+	li $s7, ' '					# if inputted char not valid, sets blank, exits
+	j endcal
+
+addcal:
+	add $v0, $a0, $a2
+	j endcal
+
+subcal:
+	sub $v0, $a0, $a2
+	j endcal
+
+mulcal:
+	mul $v0, $a0, $a2
+	j endcal
+
+divcal:
+	beq $a2, $0, errormsg		# divide by zero check
+	div $v0, $a0, $a2
+	j endcal
+
+gcfcal:
+	beq $a0, $0, errormsg		# checks if either values are zero
+	beq $a2, $0, errormsg
+	move $a1, $a2
+	jal gcf
+	j endcal
+
+chocal:
+	bgt $a2, $a0, errormsg		# Won't compute if k > n
+	blt $a0, 0, errormsg		# Won't compute negative numbers
+	blt $a2, 0, errormsg
+	bgt $a0, 30, errormsg		# n can't be larger than 30
+	move $a1, $a2
+	jal calnchoosek
+	j endcal
+
+errormsg:						# jumped here if error is detected
+	li $v0, 4       			# syscall 4 (print_str)
+	move $t5, $a0
+	la $a0, str1
+	syscall
+	#move $v0, $t5
+	li $v0, 0					# global var. current value.	
+	li $s7, ' '					# global var. current oper.
+	j endcal
+
+endcal:
+	lw $a2, 0($sp)				# restore stack
+	addi $sp, $sp, 4
+	lw $a1, 0($sp)				
+	addi $sp, $sp, 4
+	lw $a0, 0($sp)				
+	addi $sp, $sp, 4
+	lw $ra, 0($sp)				
+	addi $sp, $sp, 4
+	jr $ra
+	
+	
+#-----------------------------------
+# returns in $v0 the greatest common factor between two values
+# $a0 and $a1 are the two values
+#-----------------------------------
+gcf:
+	addi $sp, $sp, -4			# store in stack
+	sw $a0, 0($sp)
+	addi $sp, $sp, -4
+	sw $a1, 0($sp)
+	
+	bne $a1, $zero, L1			# go to L1 if b isn't zero
+	j EXIT						# jump to exit
+
+L1:
+	beq  $a1, $zero, EXIT		# branch loop
+	move $t0, $a1				# temp = b
+	rem $a1, $a0, $a1			# $a1 = $a0 % $a1
+	move $a0, $t0				# a0 = temp
+	j L1
+EXIT:
+	move $v0, $a0				# stores result in $v0
+	
+	lw $a1, 0($sp)				# restore stack		
+	addi $sp, $sp, 4
+	lw $a0, 0($sp)
+	addi $sp, $sp, 4	
+	jr	$ra
+	
+	
+#-----------------------------------
+# returns in $v0 C(n,k)
+# $a0 is n and $a1 is k
+#-----------------------------------
+calnchoosek:					# n!/(k!(n-k)!)
+	addi $sp, $sp, -4			# store in stack
+	sw $a0, 0($sp)
+	addi $sp, $sp, -4
+	sw $a1, 0($sp)
+
+	mtc1 $a0, $f4				# $f4 gets $a0
+	cvt.d.w $f4, $f4
+	mtc1 $a1, $f6				# $f6 gets $a1
+	cvt.d.w $f6, $f6
+	
+	li.d $f2, 1.0				# counter
+	li.d $f0, 1.0				#  storage for multiplication
+	li.d $f20, 1.0				# constant 1
+nfact:							# factoralizing n
+	mul.d $f0, $f0, $f2			# $f0 is !n
+	add.d $f2, $f2, $f20
+	c.le.d $f2, $f4
+	bc1t nfact
+
+	li.d $f2, 1.0				# counter
+	li.d $f10, 1.0				# storage for multiplication
+kloop:							# factoralizing k
+	mul.d $f10, $f10, $f2		# $f10 is !k
+	add.d $f2, $f2, $f20
+	c.le.d $f2, $f6
+	bc1t kloop
+
+	sub.d $f12, $f4, $f6		# n-k
+	li.d $f2, 1.0				# counter
+	li.d $f14, 1.0				# storage for multiplication
+diffact:						# factoralizing n-k
+	mul.d $f14, $f14, $f2		# !n-k
+	add.d $f2, $f2, $f20
+	c.le.d $f2, $f12
+	bc1t diffact
+								# creates unified divisor, then n! divided by that
+	mul.d $f2, $f10, $f14		# fact(k) * fact(n-k)
+	div.d $f16, $f0, $f2		# n choose k result
+	cvt.w.d $f16, $f16
+	mfc1 $v0, $f16
+	
+	lw $a1, 0($sp)				# restore stack
+	addi $sp, $sp, 4
+	lw $a0, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra	
